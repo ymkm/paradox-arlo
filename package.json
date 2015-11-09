@@ -1,0 +1,22 @@
+{
+  "name": "paradox-arlo",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "setup": "node-lambda setup",
+    "run": "node-lambda run",
+    "deploy": "node-lambda deploy"
+  },
+  "dependencies": {
+    "config": "^1.15.0",
+    "lodash": "~3.10.1",
+    "moment": "^2.10.6",
+    "q": "~1.4.1",
+    "redis": "^1.0.0",
+    "request": "~2.61.0",
+    "request-json": "^0.5.3",
+    "node-lambda": "0.1.5"
+  }
+}
+

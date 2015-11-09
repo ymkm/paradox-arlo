@@ -1,0 +1,12 @@
+{
+    "redisKey": "arlo",
+    "baseUrl": "https://arlo.netgear.com",
+    "email": "you@example.com",
+    "password": "your password",
+    "redisUrl": "redis://you@redis.example.com",
+    "userAgent": "Mozilla/5.0",
+    "modes": {
+        "on": "mode0",
+        "off": "mode1"
+    }
+}

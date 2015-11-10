@@ -5,27 +5,27 @@ var arlo = require('./clients/arlo');
 exports.handler = function (event, context) {
 
     if (!event.TextBody) {
+
         context.fail('TextBody not present');
+
     } else {
-        console.log(event.TextBody);
-        var mode = "";
 
         if (event.TextBody.indexOf("Arming") > -1) {
-            mode = "on";
+
+            arlo.setSchedule(false)
+                .then(function () {
+                    arlo.setCameraMode("on").then(context.succeed, context.fail);
+                }, context.fail)
+
         } else if (event.TextBody.indexOf("Disarming") > -1) {
-            mode = "off";
+
+            arlo.setSchedule(true).then(context.succeed, context.fail);
+
         } else {
+
             context.fail('No arming message found in post');
         }
 
-        console.log("setting mode to " +mode);
-
-        arlo.setCameraMode(mode).then(function (r) {
-            context.succeed(r);
-        }).fail(function (error) {
-            context.fail(error);
-        }).done();
     }
 };
-
 

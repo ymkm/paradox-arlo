@@ -45,4 +45,4 @@ var onEvent = {
     "Attachments": []
 };
 
-app.handler(onEvent, context);
+app.handler(offEvent, context);

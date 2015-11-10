@@ -1,13 +1,10 @@
 var Q = require('q');
 var C = require('config');
 var U = require('../lib/util');
-var _ = require('lodash');
 var requestJson = require('request-json');
-var request = require('request');
+var request = require('requestretry');
 var redis = require('../clients/redis');
 
-
-// fix up retry logic & expose more methods
 
 function setCameraModeRetryAuthOnFail(mode) {
 
@@ -15,8 +12,8 @@ function setCameraModeRetryAuthOnFail(mode) {
         setCameraMode(mode).then(resolve, function () {
 
             getNewAuthToken().then(function () {
-                setCameraMode(mode).then(resolve,reject);
-            },reject);
+                setCameraMode(mode).then(resolve, reject);
+            }, reject);
         })
     });
 }
@@ -59,6 +56,59 @@ function setCameraMode(mode) {
         }, reject)
     });
 
+}
+
+function setScheduleRetryAuthOnFail(state) {
+
+    return Q.Promise(function (resolve, reject) {
+        setSchedule(state).then(resolve, function () {
+
+            getNewAuthToken().then(function () {
+                setSchedule(state).then(resolve, reject);
+            }, reject);
+        })
+    });
+}
+
+function setSchedule(state) {
+
+    return Q.Promise(function (resolve, reject) {
+
+        if (typeof state !== "boolean") throw new Error("boolean expected to set Schedule");
+
+        getUserDetails().then(function (arlo) {
+            var client = requestJson.createClient(C.baseUrl);
+
+            var data = {
+                from: arlo.userId,
+                action: 'set',
+                responseUrl: '',
+                resource: 'schedule',
+                transId: U.getTransactionId(),
+                publishResponse: true,
+                properties: {
+                    active: state
+                }
+            };
+
+            client.headers = {
+                'Authorization': arlo.token,
+                'Accept-Encoding': 'gzip, deflate',
+                'Content-Type': 'application/json;charset=UTF-8',
+                'Accept': 'application/json',
+                'xcloudId': arlo.xCloudId
+            };
+
+            client.post("/hmsweb/users/devices/notify/" + arlo.deviceId, data, function (error, response, body) {
+
+                if (!error && response.statusCode == 200) {
+                    resolve("Arlo camera schedule set to  " + state)
+                } else {
+                    reject(new Error("Could not turn set Arlo schedule to  " + state + " : " + response.statusCode + " : " + error));
+                }
+            });
+        }, reject)
+    });
 }
 
 function getUserDetails() {
@@ -132,9 +182,7 @@ function getAuthToken() {
 
         redis.get(C.redisKey, "token").then(function (token) {
             if (token === null) {
-                getNewAuthToken().then(function (token) {
-                    resolve(token)
-                }, reject);
+                getNewAuthToken().then(resolve, reject);
             } else {
                 resolve(token);
             }
@@ -185,5 +233,6 @@ function getUncachedAuthToken() {
 }
 
 module.exports = {
-    setCameraMode: setCameraModeRetryAuthOnFail
+    setCameraMode: setCameraModeRetryAuthOnFail,
+    setSchedule: setScheduleRetryAuthOnFail
 };
